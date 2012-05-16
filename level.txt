@@ -1,0 +1,12 @@
+Level1
+1
+Level2
+11
+Level3
+111
+Level4
+
+END
+
+
+Incap 14 brickuri pe un rand
