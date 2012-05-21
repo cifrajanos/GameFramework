@@ -17,6 +17,7 @@
 #include "CPlayer.h"
 #include "Ball.h"
 #include "Brick.h"
+#include "Gift.h"
 #include "CGameObject.h"
 #include "BackBuffer.h"
 #include "ResizableImage.h"
@@ -72,9 +73,12 @@ private:
 	void		CollisionDetection();
 	void		Score();
 	void		Increase_Score(int k);
+	void		Decrease_Score(int k);
 	void		DrawScore(HDC hdc) const;
 	void		Life();
 	void		Decrease_Life();
+	void		Increase_Life();
+	void		Decrease_Life2();
 	void		DrawLife(HDC hdc) const;
 	void		DrawGame(HDC hdc,char type[20]);
 
@@ -121,7 +125,13 @@ private:
 	int					BricksExist;
 	int					nrlevel;
 	int					LevelChange;
+	int					BeginGameS;
+	int					CountBricks;
+	int					CountGifts;
+	int					UnstoppableBall;
+	int					nBricks;
 
+	std::vector<std::shared_ptr<CGameObject>> m_vGameObjectsGift;
 	std::vector<std::shared_ptr<CGameObject>> m_vGameObjects;
 	std::weak_ptr<CPlayer> m_pPlayer;
 	std::weak_ptr<Ball> m_pBall;

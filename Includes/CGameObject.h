@@ -20,6 +20,23 @@ enum GameObjectType
 	GOT_Brick,
 };
 
+
+enum GameObjectTypeSub
+{
+	GOT_InvalidSub = -1,
+	GOT_Ballk,
+	GOT_Brickk,
+	GOT_Bricku,
+	GOT_Brickd,
+	GOT_BrickGift,
+	GOT_Gift100,
+	GOT_Gift200,
+	GOT_GiftUpLife,
+	GOT_GiftDownLife,
+	GOT_GiftUnstoppableBall,
+
+};
+
 enum CollisionSide
 {
     CS_None = 0,
@@ -36,6 +53,8 @@ public:
     virtual ~CGameObject();
 
 	virtual GameObjectType GetObjectType() const { return GOT_Invalid; }
+	virtual GameObjectTypeSub GetObjectTypeSub() const { return GOT_InvalidSub; }
+	virtual char GetBrickType(){ return GOT_Invalid; }
 	virtual void Update(float dt);
 	virtual void Draw(HDC hdc) const = 0;
 	virtual bool Expired() const { return false; }
@@ -47,6 +66,8 @@ public:
 	};
 	virtual Vec2 PlayerGetPosition( Vec2 myPosition ){ return myPosition; };
 	virtual void Init(HDC hdc, const Vec2& position) { };
+	virtual int	DecreaseDouble(){ return 0; };
+	virtual void ChangeSprite(){ };
 
 
 public:

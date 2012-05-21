@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// File: CPlayer.cpp
+// File: Gift.cpp
 //
 // Desc: This file stores the player object class. This class performs tasks
 //	   such as player movement, some minor physics as well as rendering.
@@ -7,8 +7,8 @@
 // Original design by Adam Hoult & Gary Simmons. Modified by Mihai Popescu.
 //-----------------------------------------------------------------------------
 
-#ifndef _BRICK_H_
-#define _BRICK_H_
+#ifndef _GIFT_H_
+#define _GIFT_H_
 
 //-----------------------------------------------------------------------------
 // CPlayer Specific Includes
@@ -21,10 +21,10 @@
 // Main Class Definitions
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-// Name : CPlayer (Class)
+// Name : Gift (Class)
 // Desc : Player class handles all player manipulation, update and management.
 //-----------------------------------------------------------------------------
-class Brick : public CGameObject
+class Gift : public CGameObject
 {
 public:
 	//-------------------------------------------------------------------------
@@ -47,8 +47,8 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-			 Brick(char type);
-	virtual ~Brick();
+			 Gift(char type);
+	virtual ~Gift();
 
 	//-------------------------------------------------------------------------
 	// Public Functions for This Class.
@@ -61,16 +61,13 @@ public:
 	}
 	GameObjectTypeSub			GetObjectTypeSub() const 
 	{ 	
-		switch(BrickType)
+		switch(GiftType)
 		{
-			case '1': return GOT_Brickk; break;
-			case 'u': return GOT_Bricku; break;
-			case 'd': return GOT_Brickd; break;
-			case 'a': return GOT_BrickGift; break;
-			case 'b': return GOT_BrickGift; break;
-			case 'c': return GOT_BrickGift; break;
-			case 'e': return GOT_BrickGift; break;
-			case 'f': return GOT_BrickGift; break;
+			case 'a': return GOT_Gift100; break;
+			case 'b': return GOT_Gift200; break;
+			case 'c': return GOT_GiftUpLife; break;
+			case 'e': return GOT_GiftDownLife; break;
+			case 'f': return GOT_GiftUnstoppableBall; break;
 		}
 	}
 	void					Draw(HDC hdc) const;
@@ -79,7 +76,6 @@ public:
 	virtual int				GetHeight() const { return m_pSprite->GetHeight(); }
 	int						DecreaseDouble(){ --DoubleCollision; return DoubleCollision;};
 	void					ChangeSprite(){ delete m_pSprite; m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); }
-	char					GetBrickType(){ return BrickType; }
 
 private:
 	//-------------------------------------------------------------------------
@@ -89,9 +85,9 @@ private:
 	Sprite*					m_pSprite;
 	ESpeedStates			m_eSpeedState;
 	float					m_fTimer;
-	char					BrickType;
+	char					GiftType;
 	int						DoubleCollision;
 	
 };
 
-#endif // _BRICK_H_
+#endif // _GIFT_H_

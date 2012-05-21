@@ -40,6 +40,7 @@ CGameApp::CGameApp()
 	FollowPlayer	= 1;
 	GameOver		= 0;
 	BricksExist		= 0;
+	UnstoppableBall	= 0;
 	Score();
 	Life();
 }
@@ -62,9 +63,17 @@ bool CGameApp::InitInstance( LPCTSTR lpCmdLine, int iCmdShow )
 {
 	// Create the primary display device
 	if (!CreateDisplay()) { ShutDown(); return false; }
+	
+	m_pBBuffer = new BackBuffer(m_hWnd, m_nViewWidth, m_nViewHeight);
+
+		if(!m_imgBackground.LoadBitmapFromFile("data/background2.bmp", GetDC(m_hWnd)))
+		return false;
+
+	m_imgBackground.SetFilter(new CBoxFilter());
+	m_imgBackground.Resample(m_nViewWidth, m_nViewHeight);
 
 	// Build Objects
-	if (!BuildObjects()) 
+	/*if (!BuildObjects()) 
 	{ 
 		MessageBox( 0, _T("Failed to initialize properly. Reinstalling the application may solve this problem.\nIf the problem persists, please contact technical support."), _T("Fatal Error"), MB_OK | MB_ICONSTOP);
 		ShutDown(); 
@@ -72,7 +81,7 @@ bool CGameApp::InitInstance( LPCTSTR lpCmdLine, int iCmdShow )
 	}
 
 	// Set up all required game states
-	SetupGameState();
+	SetupGameState();*/
 
 	// Success!
 	return true;
@@ -140,7 +149,7 @@ bool CGameApp::CreateDisplay()
 int CGameApp::BeginGame()
 {
 	MSG		msg;
-
+	BeginGameS=0;
 	// Start main loop
 	while(true) 
 	{
@@ -153,7 +162,32 @@ int CGameApp::BeginGame()
 		} 
 		else 
 		{
+			cursor.cbSize = sizeof(CURSORINFO);
+			GetCursorInfo(&cursor);
+
 			// Advance Game Frame.
+			if(BeginGameS==0)
+			{				
+				if(cursor.ptScreenPos.x > 600 && cursor.ptScreenPos.y < 220)
+				{
+					if (!BuildObjects()) 
+					{ 
+						MessageBox( 0, _T("Failed to initialize properly. Reinstalling the application may solve this problem.\nIf the problem persists, please contact technical support."), _T("Fatal Error"), MB_OK | MB_ICONSTOP);
+						ShutDown(); 
+						return false; 
+					}
+
+					// Set up all required game states
+					SetupGameState();
+					BeginGameS=1;
+				}
+
+				if(cursor.ptScreenPos.x > 600 && cursor.ptScreenPos.y > 580)
+				{
+					PostQuitMessage(0);
+				}
+			}
+			cursor.cbSize = sizeof(CURSORINFO);
 			FrameAdvance();
 		} // End If messages waiting
 	
@@ -248,8 +282,17 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			} // End if !Minimized
 			break;
 
-		case WM_LBUTTONDOWN:
+		/*case WM_LBUTTONDOWN:
 			// Capture the mouse
+			SetCapture( m_hWnd );
+			GetCursorPos( &m_OldCursorPos );
+			break;*/
+
+		case WM_LBUTTONDOWN:
+			FollowPlayer=0;
+			LevelChange = 0;
+			Direction |= Ball::DIR_START;
+			m_pBall.lock()->Move(Direction,0);
 			SetCapture( m_hWnd );
 			GetCursorPos( &m_OldCursorPos );
 			break;
@@ -263,10 +306,12 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			switch(wParam)
 			{
 			case VK_ESCAPE:
+				_CrtDumpMemoryLeaks();
 				PostQuitMessage(0);
 				break;
 			case VK_SPACE:
 				FollowPlayer=0;
+				LevelChange = 0;
 				Direction |= Ball::DIR_START;
 				m_pBall.lock()->Move(Direction,0);
 				break;
@@ -302,17 +347,15 @@ bool CGameApp::BuildObjects()
 
 	nrlevel=1;
 	level.LoadBricks(nrlevel);
-	//level.bricks.c_str();
-
-	/*for(int i=0;i<39;i++){
-	auto pBrick = std::make_shared<Brick>();
-	m_vGameObjects.push_back(pBrick);
-	}*/
 
 	string::iterator it;
 	for(it=level.bricks.begin(); it < level.bricks.end(); it++)
 	{
-		auto pBrick = std::make_shared<Brick>();
+		if(*it == '-')
+		{
+			continue;
+		}
+		auto pBrick = std::make_shared<Brick>(*it);
 		m_vGameObjects.push_back(pBrick);
 	}
 	BricksExist=1;
@@ -339,6 +382,7 @@ void CGameApp::SetupGameState()
 
 	int x=65;
 	int y=100;
+	nBricks=0;
 	m_pPlayer.lock()->Init(m_pBBuffer->getDC(), Vec2((int)m_nViewWidth/2, (int)m_nViewHeight-m_pPlayer.lock()->GetHeight()));
 	m_pBall.lock()->Init(m_pBBuffer->getDC(), Vec2((int)m_nViewWidth/2,(int)m_nViewHeight-m_pBall.lock()->GetHeight()-m_pPlayer.lock()->GetHeight()-1));
 	for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
@@ -346,12 +390,31 @@ void CGameApp::SetupGameState()
 		CGameObject * pGameObj = it->get();
 		if(pGameObj->GetObjectType() == GOT_Brick)
 		{
+			for(int i=0;i<sizeof(level.bricks);i++)
+			{
+				if(level.bricks[nBricks]=='-')
+				{
+					x+=pGameObj->GetWidth()+1;
+					if(x>=750)
+					{
+						x=65;
+						y+=pGameObj->GetHeight()+1;
+					}
+				}
+				else
+				{
+					nBricks++;
+					break; 
+				}
+				nBricks++;
+			}
+
 			pGameObj->Init(m_pBBuffer->getDC(), Vec2(x,y));
-			x+=51;
+			x+=pGameObj->GetWidth()+1;
 			if(x>=750)
 			{
 				x=65;
-				y+=26;
+				y+=pGameObj->GetHeight()+1;
 			}
 		}
 	}
@@ -373,9 +436,10 @@ void CGameApp::ReleaseObjects( )
 {
 	// this will automatically call the d-tors for each shared pointer objects
 	m_vGameObjects.clear();
+	m_vGameObjectsGift.clear();
 
 	SAFE_DELETE(m_pBBuffer);
-   // SAFE_DELETE(m_pParallax);
+    // SAFE_DELETE(m_pParallax);
 }
 
 //-----------------------------------------------------------------------------
@@ -388,7 +452,7 @@ void CGameApp::FrameAdvance()
 	static TCHAR TitleBuffer[ 255 ];
 
 	// Advance the timer
-	m_Timer.Tick( 60 );
+	m_Timer.Tick( 15 );
 
 	// Skip if app is inactive
 	if ( !m_bActive ) return;
@@ -401,49 +465,125 @@ void CGameApp::FrameAdvance()
 		SetWindowText( m_hWnd, TitleBuffer );
 	} // End if Frame Rate Altered
 
+	if(BeginGameS==1)
+	{
 	// Poll & Process input devices
 	ProcessInput();
 
 	// Collision detection between game objects
 	BricksExist=0;
 	CollisionDetection();
-	if(BricksExist==0)
-	{
-		int x=65;
-		int y=100;
-		m_pBall.lock()->myVelocity.x=0;
-		m_pBall.lock()->myVelocity.y=0;
-		m_pBall.lock()->myPosition.x=m_pPlayer.lock()->myPosition.x;
-		m_pBall.lock()->myPosition.y=m_nViewHeight-m_pBall.lock()->GetHeight()-m_pPlayer.lock()->GetHeight()-1;
-		FollowPlayer=1;
-		nrlevel++;
-		level.LoadBricks(nrlevel);
-
-		string::iterator it;
-		for(it=level.bricks.begin(); it < level.bricks.end(); it++)
+		if(BricksExist==0)
 		{
-			auto pBrick = std::make_shared<Brick>();
-			m_vGameObjects.push_back(pBrick);
-		}
+			int x=65;
+			int y=100;
 
-		for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
-		{
-			CGameObject * pGameObj = it->get();
-			if(pGameObj->GetObjectType() == GOT_Brick)
+			CountBricks=0;
+			CountGifts=0;
+			nBricks=0;
+
+			for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
 			{
-				pGameObj->Init(m_pBBuffer->getDC(), Vec2(x,y));
-				x+=51;
-				if(x>=750)
+				CGameObject * pGameObj = it->get();
+				
+				if(pGameObj->GetObjectTypeSub() == GOT_Bricku)
 				{
-					x=65;
-					y+=26;
+					CountBricks++;
 				}
 			}
+
+			for(int i=0;i<=CountBricks;i++)
+			{
+				for(auto it2 = m_vGameObjects.begin(); it2 != m_vGameObjects.end(); ++it2)
+				{
+					CGameObject * pGameObj = it2->get();
+					if(pGameObj->GetObjectTypeSub() == GOT_Bricku)
+					{
+						m_vGameObjects.erase(it2);
+						break;
+					}
+				}
+			}
+
+			for(auto it = m_vGameObjectsGift.begin(); it != m_vGameObjectsGift.end(); ++it)
+			{
+				CGameObject * pGameObj = it->get();
+				
+				CountGifts++;
+
+			}
+
+			for(int i=0;i<=CountGifts;i++)
+			{
+				for(auto it2 = m_vGameObjectsGift.begin(); it2 != m_vGameObjectsGift.end(); ++it2)
+				{
+					CGameObject * pGameObj = it2->get();
+					
+					m_vGameObjectsGift.erase(it2);
+					break;
+					
+				}
+			}
+
+			m_pBall.lock()->myVelocity.x=0;
+			m_pBall.lock()->myVelocity.y=0;
+			m_pBall.lock()->myPosition.x=m_pPlayer.lock()->myPosition.x;
+			m_pBall.lock()->myPosition.y=m_nViewHeight-m_pBall.lock()->GetHeight()-m_pPlayer.lock()->GetHeight()-1;
+			FollowPlayer=1;
+			UnstoppableBall=0;
+			nrlevel++;
+			level.LoadBricks(nrlevel);
+
+			string::iterator it;
+			for(it=level.bricks.begin(); it < level.bricks.end(); it++)
+			{
+				if(*it == '-')
+				{
+					continue;
+				}
+				auto pBrick = std::make_shared<Brick>(*it);
+				m_vGameObjects.push_back(pBrick);
+			}
+
+			for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
+			{
+				CGameObject * pGameObj = it->get();
+				if(pGameObj->GetObjectType() == GOT_Brick)
+				{
+					for(int i=0;i<sizeof(level.bricks);i++)
+					{
+						if(level.bricks[nBricks]=='-')
+						{
+							x+=pGameObj->GetWidth()+1;
+							if(x>=750)
+							{
+								x=65;
+								y+=pGameObj->GetHeight()+1;
+							}
+						}
+						else
+						{
+							nBricks++;
+							break; 
+						}
+						nBricks++;
+					}
+
+					pGameObj->Init(m_pBBuffer->getDC(), Vec2(x,y));
+					x+=pGameObj->GetWidth()+1;
+					if(x>=750)
+					{
+						x=65;
+						y+=pGameObj->GetHeight()+1;
+					}
+				}
+			}
+			LevelChange=1;
 		}
-		LevelChange=1;
+		
+		// Animate the game objects
+		AnimateObjects();
 	}
-	// Animate the game objects
-	AnimateObjects();
 
 	// Drawing the game objects
 	DrawObjects();
@@ -461,20 +601,19 @@ void CGameApp::ProcessInput( )
 	float		X = 0.0f, Y = 0.0f;
 
 	// Get cursor position
-	cursor.cbSize = sizeof(CURSORINFO);
+	//cursor.cbSize = sizeof(CURSORINFO);
 	GetCursorInfo(&cursor);
 
 	// Retrieve keyboard state
 	if ( !GetKeyboardState( pKeyBuffer ) ) return;
 
 	// Check the relevant keys
-	if ( pKeyBuffer[ VK_UP	] & 0xF0 ) Direction |= CPlayer::DIR_FORWARD;
-	if ( pKeyBuffer[ VK_DOWN  ] & 0xF0 ) Direction |= CPlayer::DIR_BACKWARD;
+	//if ( pKeyBuffer[ VK_UP	] & 0xF0 ) Direction |= CPlayer::DIR_FORWARD;
+	//if ( pKeyBuffer[ VK_DOWN  ] & 0xF0 ) Direction |= CPlayer::DIR_BACKWARD;
 	if ( pKeyBuffer[ VK_LEFT  ] & 0xF0 ) Direction |= CPlayer::DIR_LEFT;
 	if ( pKeyBuffer[ VK_RIGHT ] & 0xF0 ) Direction |= CPlayer::DIR_RIGHT;
-	if ( pKeyBuffer[ VK_SPACE ] & 0xF0 ) LevelChange = 0;
 
-	SetCursor( NULL );
+	//SetCursor( NULL );
 
 	if ( GetCapture() == m_hWnd )
 	{
@@ -521,6 +660,7 @@ void CGameApp::AnimateObjects()
 {
 	ExpiredPredicate expiredPred;
 	m_vGameObjects.erase(std::remove_if(m_vGameObjects.begin(), m_vGameObjects.end(), expiredPred), m_vGameObjects.end());
+	m_vGameObjectsGift.erase(std::remove_if(m_vGameObjectsGift.begin(), m_vGameObjectsGift.end(), expiredPred), m_vGameObjectsGift.end());
 
     float dt = m_Timer.GetTimeElapsed();
 
@@ -528,6 +668,7 @@ void CGameApp::AnimateObjects()
 	{
 		UpdateFunctor updateFn(dt);
 		std::for_each(m_vGameObjects.begin(), m_vGameObjects.end(), updateFn);
+		std::for_each(m_vGameObjectsGift.begin(), m_vGameObjectsGift.end(), updateFn);
 	}
 
    // m_pParallax->Move(CPlayer::DIR_FORWARD);
@@ -547,11 +688,12 @@ void CGameApp::DrawObjects()
     m_imgBackground.Paint(hdc, 0, 0);
 
   //  m_pParallax->Draw(hdc);
-
+	
 	if(GameOver == 0 && level.Winner == 0 && LevelChange == 0)
 	{
 		DrawFunctor drawFn(hdc);
 		std::for_each(m_vGameObjects.begin(), m_vGameObjects.end(), drawFn);
+		std::for_each(m_vGameObjectsGift.begin(), m_vGameObjectsGift.end(), drawFn);
 	}
 	else
 	{
@@ -579,6 +721,7 @@ void CGameApp::CollisionDetection()
 	
 	HDC hdc = m_pBBuffer->getDC();
 
+
 	for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
 	{
 
@@ -587,62 +730,66 @@ void CGameApp::CollisionDetection()
 
         pGameObj->myCollisionSide = CS_None;
 
-		if(pGameObj->GetObjectType() == GOT_Brick)
+		if(pGameObj->GetObjectTypeSub() == GOT_Brickk || pGameObj->GetObjectTypeSub() == GOT_Brickd || pGameObj->GetObjectTypeSub() == GOT_BrickGift)
 		{
 			BricksExist=1;
 		}
 
-        int dx = (int)pos.x - pGameObj->GetWidth() / 2;
-		if( dx < 0 )
+		if(pGameObj->GetObjectType() == GOT_Ball || pGameObj->GetObjectType() == GOT_Player)
 		{
-			pGameObj->myCollisionSide |= CS_Left;
-			if(pGameObj->GetObjectType() == GOT_Player)
+			int dx = (int)pos.x - pGameObj->GetWidth() / 2;
+			if( dx < 0 )
 			{
-			pGameObj->myPosition.x=pGameObj->GetWidth()/2;
-				if(FollowPlayer==1)
+				pGameObj->myCollisionSide |= CS_Left;
+				if(pGameObj->GetObjectType() == GOT_Player)
 				{
-					m_pBall.lock()->myPosition.x=pGameObj->GetWidth()/2;
+				pGameObj->myPosition.x=pGameObj->GetWidth()/2;
+					if(FollowPlayer==1)
+					{
+						m_pBall.lock()->myPosition.x=pGameObj->GetWidth()/2;
+					}
 				}
 			}
-		}
 
 
-        dx = (int)pos.x - (m_nViewWidth - pGameObj->GetWidth() / 2);
-		if( dx > 0 )
-		{
-			pGameObj->myCollisionSide |= CS_Right;
-			if(pGameObj->GetObjectType() == GOT_Player)
+		 dx = (int)pos.x - (m_nViewWidth - pGameObj->GetWidth() / 2);
+			if( dx > 0 )
 			{
-			pGameObj->myPosition.x=m_nViewWidth - pGameObj->GetWidth() / 2;
-				if(FollowPlayer==1)
+				pGameObj->myCollisionSide |= CS_Right;
+				if(pGameObj->GetObjectType() == GOT_Player)
 				{
-					m_pBall.lock()->myPosition.x=m_nViewWidth - pGameObj->GetWidth() / 2;
+				pGameObj->myPosition.x=m_nViewWidth - pGameObj->GetWidth() / 2;
+					if(FollowPlayer==1)
+					{
+						m_pBall.lock()->myPosition.x=m_nViewWidth - pGameObj->GetWidth() / 2;
+					}
 				}
 			}
-		}
 		
-        int dy = (int)pos.y - pGameObj->GetHeight() / 2;
-		if( dy < 0 )
-		{
-
-			pGameObj->myCollisionSide |= CS_Top;
-		}
-
-        dy = (int)pos.y - (m_nViewHeight - pGameObj->GetHeight() / 2);
-		if( dy > 0 )
-		{
-			pGameObj->myCollisionSide |= CS_Bottom;
-			if(pGameObj->GetObjectType() == GOT_Ball)
+			int dy = (int)pos.y - pGameObj->GetHeight() / 2;
+			if( dy < 0 )
 			{
-				Decrease_Life();
-				if(life<1)
+
+				pGameObj->myCollisionSide |= CS_Top;
+			}
+
+			dy = (int)pos.y - (m_nViewHeight - pGameObj->GetHeight() / 2);
+			if( dy > 0 )
+			{
+				pGameObj->myCollisionSide |= CS_Bottom;
+				if(pGameObj->GetObjectType() == GOT_Ball)
 				{
-					GameOver = 1;
+					Decrease_Life();
+					UnstoppableBall = 0;
+					if(life<1)
+					{
+						GameOver = 1;
+					}
 				}
 			}
 		}
 
-
+		if(pGameObj->GetObjectType() == GOT_Ball)
 		for(auto it2 = m_vGameObjects.begin(); it2 != m_vGameObjects.end(); ++it2)
 		{
 			CGameObject * pGameObj2 = it2->get();
@@ -651,23 +798,112 @@ void CGameApp::CollisionDetection()
 
 			if(pGameObj->GetObjectType() == pGameObj2->GetObjectType())
 			continue;
-			if(pGameObj->GetObjectType() == GOT_Ball){
-				if((abs(pos.y - pos2.y) < pGameObj->GetHeight()/2+pGameObj2->GetHeight()/2) && (abs(pos.x - pos2.x) < pGameObj->GetWidth()/2+pGameObj2->GetWidth()/2))
-			{		
+			if(pGameObj2->GetObjectType() == GOT_Player || pGameObj2->GetObjectType() == GOT_Brick)
+			{
+				if(abs(pos.y - pos2.y) < pGameObj->GetHeight()/2+pGameObj2->GetHeight()/2 && abs(pos.x - pos2.x) < pGameObj->GetWidth()/2+pGameObj2->GetWidth()/2)
+				{		
 
-				pGameObj->myVelocity.y = -pGameObj->myVelocity.y;
+					if(pGameObj2->GetObjectType() == GOT_Player)
+					{
+						pGameObj->myVelocity.y = -pGameObj->myVelocity.y;
+					}
+					else
+					{
+						if(UnstoppableBall != 1)
+						if(pos.x-pos2.x>35)
+						{
+							pGameObj->myVelocity.x = -pGameObj->myVelocity.x;
+						}else{pGameObj->myVelocity.y = -pGameObj->myVelocity.y;}
+					}
 
-
-				if(pGameObj2->GetObjectType() == GOT_Brick){
-					Increase_Score(12);
-					DrawScore(hdc);
-					m_vGameObjects.erase(it2);
-					break;
+					if(pGameObj2->GetObjectTypeSub() == GOT_Brickk || pGameObj2->GetObjectTypeSub() == GOT_Brickd || pGameObj2->GetObjectTypeSub() == GOT_BrickGift)
+					{
+						if(pGameObj2->GetObjectTypeSub() == GOT_Brickd)
+						{						
+							int CheckDouble=pGameObj2->DecreaseDouble();
+							if(CheckDouble == 1)
+								{
+									Increase_Score(12);
+									pGameObj2->ChangeSprite();
+								}
+							if(CheckDouble == 0)
+							{
+								Increase_Score(12);
+								DrawScore(hdc);
+								m_vGameObjects.erase(it2);
+								break;
+							}
+						}
+						else
+						{
+							if(pGameObj2->GetObjectTypeSub() == GOT_BrickGift)
+							{
+								auto pGift = std::make_shared<Gift>(pGameObj2->GetBrickType());
+								pGift->Init(m_pBBuffer->getDC(), Vec2(pos2.x,pos2.y));
+								m_vGameObjectsGift.push_back(pGift);
+							}
+							Increase_Score(12);
+							DrawScore(hdc);
+							m_vGameObjects.erase(it2);
+							break;
+						}
+					}
 				}
 			}
 		}
+
+		if(pGameObj->GetObjectType() == GOT_Player)
+		for(auto it2 = m_vGameObjectsGift.begin(); it2 != m_vGameObjectsGift.end(); ++it2)
+		{
+			CGameObject * pGameObj2 = it2->get();
+			Vec2 pos2 = pGameObj2->myPosition;
+
+			if(abs(pos.y - pos2.y) < pGameObj->GetHeight()/2+pGameObj2->GetHeight()/2 && abs(pos.x - pos2.x) < pGameObj->GetWidth()/2+pGameObj2->GetWidth()/2)
+			{
+				if(pGameObj2->GetObjectTypeSub() == GOT_Gift100)
+				{
+				Increase_Score(100);
+				DrawScore(hdc);
+				m_vGameObjectsGift.erase(it2);
+				break;
+				}
+				if(pGameObj2->GetObjectTypeSub() == GOT_Gift200)
+				{
+				Increase_Score(200);
+				DrawScore(hdc);
+				m_vGameObjectsGift.erase(it2);
+				break;
+				}
+				if(pGameObj2->GetObjectTypeSub() == GOT_GiftUpLife)
+				{
+				Increase_Life();
+				DrawLife(hdc);
+				m_vGameObjectsGift.erase(it2);
+				break;
+				}
+				if(pGameObj2->GetObjectTypeSub() == GOT_GiftDownLife)
+				{
+				Decrease_Life2();
+				DrawLife(hdc);
+				m_vGameObjectsGift.erase(it2);
+				break;
+				}
+				if(pGameObj2->GetObjectTypeSub() == GOT_GiftUnstoppableBall)
+				{
+				UnstoppableBall=1;
+				m_vGameObjectsGift.erase(it2);
+				break;
+				}
+			}
+
+			int dy = (int)pos2.y - (m_nViewHeight - pGameObj2->GetHeight() / 2);
+			if( dy > 0 )
+			{
+				m_vGameObjectsGift.erase(it2);
+				break;
+			}
+		}
 	}
-}
 }
 
 
@@ -686,10 +922,15 @@ void CGameApp::Increase_Score(int k){
 	itoa(score, text, 10);
 }
 
+void CGameApp::Decrease_Score(int k){
+	score-=k;
+	itoa(score, text, 10);
+}
+
 void CGameApp::DrawScore(HDC hdc) const
 {
 	SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
-	SetTextColor(hdc, RGB(0xff, 0, 0));
+	SetTextColor(hdc, RGB(0x00, 0, 0));
 	SetBkMode(hdc, OPAQUE);
 	DrawText(hdc, text, -1, (LPRECT)&rect, DT_WORDBREAK);
 }
@@ -711,13 +952,22 @@ void CGameApp::Decrease_Life(){
 	m_pBall.lock()->myPosition.x=m_pPlayer.lock()->myPosition.x;
 	m_pBall.lock()->myPosition.y=m_nViewHeight-m_pBall.lock()->GetHeight()-m_pPlayer.lock()->GetHeight()-1;
 	FollowPlayer=1;
+}
 
+void CGameApp::Increase_Life(){
+	life+=1;
+	itoa(life, text2, 10);
+}
+
+void CGameApp::Decrease_Life2(){
+	life-=1;
+	itoa(life, text2, 10);
 }
 
 void CGameApp::DrawLife(HDC hdc) const
 {
 	SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
-	SetTextColor(hdc, RGB(0xff, 0, 0));
+	SetTextColor(hdc, RGB(0x00, 0, 0));
 	SetBkMode(hdc, OPAQUE);
 	DrawText(hdc, text2, -1, (LPRECT)&rect2, DT_WORDBREAK);
 }
@@ -732,7 +982,7 @@ void CGameApp::DrawGame(HDC hdc,char type[20])
 	rect.bottom = 320;
 
 	SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
-	SetTextColor(hdc, RGB(0xff, 0, 0));
+	SetTextColor(hdc, RGB(0x00, 0, 0));
 	SetBkMode(hdc, OPAQUE);
 	if(type == "level")
 	{
@@ -742,7 +992,6 @@ void CGameApp::DrawGame(HDC hdc,char type[20])
 		levels="Level ";
 		levels+=nlevel;
 		DrawText(hdc, levels.c_str(), -1, (LPRECT)&rect, DT_WORDBREAK);
-		//BricksExist=1;
 	}
 	if(type == "winner")
 	{

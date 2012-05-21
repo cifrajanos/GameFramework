@@ -10,32 +10,30 @@
 //-----------------------------------------------------------------------------
 // CPlayer Specific Includes
 //-----------------------------------------------------------------------------
-#include "Brick.h"
+#include "Gift.h"
 
 //-----------------------------------------------------------------------------
 // Name : CPlayer () (Constructor)
 // Desc : CPlayer Class Constructor
 //-----------------------------------------------------------------------------
-Brick::Brick(char type)
+Gift::Gift(char type)
 {
 	DoubleCollision=2;
-	BrickType=type;
+	GiftType=type;
 	//m_pSprite = new Sprite("data/planeimg.bmp", "data/planemask.bmp");
-	switch(BrickType)
+	switch(GiftType)
 	{
-		case '1': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'u': m_pSprite = new Sprite("data/bricku.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'd': m_pSprite = new Sprite("data/brickd.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'a': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'b': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'c': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'e': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
-		case 'f': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
+		case 'a': m_pSprite = new Sprite("data/gift.bmp", RGB(0xff,0x00, 0xff)); break;
+		case 'b': m_pSprite = new Sprite("data/gift.bmp", RGB(0xff,0x00, 0xff)); break;
+		case 'c': m_pSprite = new Sprite("data/gift.bmp", RGB(0xff,0x00, 0xff)); break;
+		case 'e': m_pSprite = new Sprite("data/gift.bmp", RGB(0xff,0x00, 0xff)); break;
+		case 'f': m_pSprite = new Sprite("data/gift.bmp", RGB(0xff,0x00, 0xff)); break;
 	}
 	
 	m_eSpeedState = SPEED_STOP;
 	m_fTimer = 0;
 
+	Move(Gift::DIR_BACKWARD);
 
 }
 
@@ -43,19 +41,19 @@ Brick::Brick(char type)
 // Name : ~CPlayer () (Destructor)
 // Desc : CPlayer Class Destructor
 //-----------------------------------------------------------------------------
-Brick::~Brick()
+Gift::~Gift()
 {
 	delete m_pSprite;
 }
 
-void Brick::Init(HDC hdc, const Vec2& position)
+void Gift::Init(HDC hdc, const Vec2& position)
 {
 	//m_pSprite->Setup(hdc);
 	m_pSprite->Initialize(hdc);
 	myPosition = position;
 }
 
-void Brick::Update(float dt)
+void Gift::Update(float dt)
 {
 	CGameObject::Update(dt);
 
@@ -77,20 +75,20 @@ void Brick::Update(float dt)
 
 }
 
-void Brick::Draw(HDC hdc) const
+void Gift::Draw(HDC hdc) const
 {
 	m_pSprite->Draw(hdc);
 }
 
-void Brick::Move(ULONG ulDirection)
+void Gift::Move(ULONG ulDirection)
 {
 	myAcceleration = Vec2();
 	myVelocity=Vec2();
 
-	if( ulDirection & Brick::DIR_LEFT )
-		myVelocity.x = -150;
-
-	if( ulDirection & Brick::DIR_RIGHT )
-		myVelocity.x = 150;
+	if( ulDirection & Gift::DIR_BACKWARD )
+	{
+		myVelocity.x = 0;
+		myVelocity.y = 250;
+	}
 
 }

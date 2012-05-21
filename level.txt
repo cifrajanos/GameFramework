@@ -1,12 +1,28 @@
 Level1
-1
+c1--1
 Level2
-11
+-1ab111111c11e
+dduu11--11uudd
+111c111111ab1-
 Level3
-111
+1-ud-a--b----c
+--ef
 Level4
 
 END
 
 
-Incap 14 brickuri pe un rand
+14 bricks on row
+
+Brick:
+1 - normal brick
+u - unbreakable brick
+d - double collision brick
+
+GiftBrick:
+a - +100 score bouns
+b - +200 score bonus
+c - +1 Life
+e - -1 Life
+f - Unstopable ball
+- - No brick
