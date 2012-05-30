@@ -149,6 +149,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Includes\LoadLevel.cpp" />
     <ClCompile Include="Source\AnimatedSprite.cpp" />
     <ClCompile Include="Source\BackBuffer.cpp" />
     <ClCompile Include="Source\Ball.cpp" />
@@ -168,12 +169,10 @@
     </ClCompile>
     <ClCompile Include="Source\Gift.cpp" />
     <ClCompile Include="Source\ImageFile.cpp" />
-    <ClCompile Include="Source\LoadLevel.cpp" />
     <ClCompile Include="Source\Main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="Source\ParallaxLayer.cpp" />
     <ClCompile Include="Source\ResizableImage.cpp" />
     <ClCompile Include="Source\TileableSprite.cpp" />
     <ClCompile Include="Source\WeightsTable.cpp" />
@@ -189,13 +188,13 @@
     <ClInclude Include="Includes\CGameObject.h" />
     <ClInclude Include="Includes\Gift.h" />
     <ClInclude Include="Includes\LoadLevel.h" />
-    <ClInclude Include="Includes\ParallaxLayer.h" />
     <ClInclude Include="Includes\CPlayer.h" />
     <ClInclude Include="Includes\CTimer.h" />
     <ClInclude Include="Includes\Filters.h" />
     <ClInclude Include="Includes\ImageFile.h" />
     <ClInclude Include="Includes\Main.h" />
     <ClInclude Include="Includes\ResizableImage.h" />
+    <ClInclude Include="Includes\Singleton.h" />
     <ClInclude Include="Includes\TileableSprite.h" />
     <ClInclude Include="Includes\WeightsTable.h" />
     <ClInclude Include="Includes\Sprite.h" />

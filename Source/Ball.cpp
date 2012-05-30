@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// File: CPlayer.cpp
+// File: Ball.cpp
 //
 // Desc: This file stores the player object class. This class performs tasks
 //       such as player movement, some minor physics as well as rendering.
@@ -8,13 +8,13 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// CPlayer Specific Includes
+// Ball Specific Includes
 //-----------------------------------------------------------------------------
 #include "Ball.h"
 
 //-----------------------------------------------------------------------------
-// Name : CPlayer () (Constructor)
-// Desc : CPlayer Class Constructor
+// Name : Ball () (Constructor)
+// Desc : Ball Class Constructor
 //-----------------------------------------------------------------------------
 Ball::Ball()
 {
@@ -26,18 +26,16 @@ Ball::Ball()
 }
 
 //-----------------------------------------------------------------------------
-// Name : ~CPlayer () (Destructor)
-// Desc : CPlayer Class Destructor
+// Name : ~Ball () (Destructor)
+// Desc : Ball Class Destructor
 //-----------------------------------------------------------------------------
 Ball::~Ball()
 {
 	delete m_pSprite;
 }
 
-void Ball::Init(HDC hdc, const Vec2& position)
+void Ball::Init(const Vec2& position)
 {
-	//m_pSprite->Setup(hdc);
-	m_pSprite->Initialize(hdc);
 	myPosition = position;
 }
 
@@ -45,34 +43,25 @@ void Ball::Update(float dt)
 {
 	CGameObject::Update(dt);
 
-
 	// Update sprites
 	m_pSprite->myPosition = myPosition;
 
 	// Get velocity
 	double v = myVelocity.Magnitude();
 
-	// NOTE: for each async sound played Windows creates a thread for you
-	// but only one, so you cannot play multiple sounds at once.
-	// This creation/destruction of threads also leads to bad performance
-	// so this method is not recommended to be used in complex projects.
-
-	// update internal time counter used in sound handling (not to overlap sounds)
-	m_fTimer += dt;
-
-
 }
 
-void Ball::Draw(HDC hdc) const
+void Ball::Draw() const
 {
-	m_pSprite->Draw(hdc);
+	m_pSprite->Draw();
+	CGameObject::Draw();
 }
 
-void Ball::Move(ULONG ulDirection, int FollowPlayer)
+void Ball::Move(ULONG ulDirection, bool FollowPlayer)
 {
-	if(FollowPlayer==1){
-	myAcceleration = Vec2();
-	myVelocity=Vec2();
+	if(FollowPlayer == true){
+		myAcceleration = Vec2();
+		myVelocity=Vec2();
 	}
 
 	if( ulDirection & Ball::DIR_START ){
@@ -80,16 +69,29 @@ void Ball::Move(ULONG ulDirection, int FollowPlayer)
 		myVelocity.x = -200;
 	}
 
-	if(FollowPlayer==1){
+	if(FollowPlayer == true){
 
-	if( ulDirection & Ball::DIR_LEFT ){
-		myVelocity.x = -150;
-	}
+		if( ulDirection & Ball::DIR_LEFT )
+		{
+			myVelocity.x = -300;
+		}
 
-	if( ulDirection & Ball::DIR_RIGHT ){
-		myVelocity.x = 150;
-		myVelocity.y = 0;
+		if( ulDirection & Ball::DIR_RIGHT )
+		{
+			myVelocity.x = 300;
+			myVelocity.y = 0;
+		}
 	}
-	}
-	
+}
+
+void Ball::Increase_Speed()
+{
+	myVelocity.x = myVelocity.x / 2 * 2.5;
+	myVelocity.y = myVelocity.x / 2 * 2.5;
+}
+
+void Ball::Decrease_Speed()
+{
+	myVelocity.x = myVelocity.x / 2.5 * 2;
+	myVelocity.y = myVelocity.x / 2.5 * 2;
 }

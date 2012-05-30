@@ -18,7 +18,7 @@ public:
 	CResizableImage() { myFilter = NULL; }
 	virtual ~CResizableImage() { if(myFilter) delete myFilter; }
 
-	void SetFilter(CGenericFilter *pFilter) { myFilter = pFilter; }
+	void SetFilter(CGenericFilter *pFilter) { if(myFilter) delete myFilter; myFilter = pFilter; }
 
 	//! Scale an image to the desired dimensions
 	void Resample(unsigned dst_width, unsigned dst_height);

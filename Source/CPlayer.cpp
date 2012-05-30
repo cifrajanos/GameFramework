@@ -23,9 +23,8 @@ CPlayer::CPlayer()
 	m_eSpeedState = SPEED_STOP;
 	m_fTimer = 0;
 
-
-	m_pExplosionSprite	= new AnimatedSprite("data/explosion.bmp", "data/explosionmask.bmp");
-	m_bExplosion		= false;
+	m_pAnimateSprite	= new AnimatedSprite("data/baranimate.bmp", "data/baranimatemask.bmp");
+	m_bAnimate		= false;
 }
 
 //-----------------------------------------------------------------------------
@@ -35,24 +34,20 @@ CPlayer::CPlayer()
 CPlayer::~CPlayer()
 {
 	delete m_pSprite;
+	delete m_pAnimateSprite;
 }
 
-void CPlayer::Init(HDC hdc, const Vec2& position)
+void CPlayer::Init(const Vec2& position)
 {
-
-	//m_pSprite->Setup(hdc);
-	m_pSprite->Initialize(hdc);
 	myPosition = position;
 
-
-    // Animation frame crop rectangle
-    RECT r;
-    r.left = 0;
-    r.top = 0;
-    r.right = 128;
-    r.bottom = 128;
-	m_pExplosionSprite->Initialize(hdc, r, 16, 1 / 16.f);
-
+	// Animation frame crop rectangle
+	RECT r;
+	r.left = 0;
+	r.top = 0;
+	r.right = 132;
+	r.bottom = 33;
+	m_pAnimateSprite->Initialize(r, 3, 1 / 16.f);
 }
 
 void CPlayer::Update(float dt)
@@ -61,41 +56,29 @@ void CPlayer::Update(float dt)
 
 	// Update sprites
 	m_pSprite->myPosition = myPosition;
+	m_pAnimateSprite->Update(dt);
 
-
-	
 	// Get velocity
 	double v = myVelocity.Magnitude();
 
-	// NOTE: for each async sound played Windows creates a thread for you
-	// but only one, so you cannot play multiple sounds at once.
-	// This creation/destruction of threads also leads to bad performance
-	// so this method is not recommended to be used in complex projects.
-
-	// update internal time counter used in sound handling (not to overlap sounds)
-	m_fTimer += dt;
-
-	// handle plane explosion
-	if(m_bExplosion && !m_pExplosionSprite->IsPlaying())
+	// handle player animation
+	if(m_bAnimate && !m_pAnimateSprite->IsPlaying())
 	{
-		m_bExplosion = false;
+		m_bAnimate = false;
 		myVelocity = Vec2(0,0);
 		m_eSpeedState = SPEED_STOP;
 	}
 
-
 }
 
-void CPlayer::Draw(HDC hdc) const
+void CPlayer::Draw() const
 {
-	//m_pSprite->Draw(hdc);
-
-    if(!m_bExplosion)
-		m_pSprite->Draw(hdc);
+	if(!m_bAnimate)
+		m_pSprite->Draw();
 	else
-		m_pExplosionSprite->Draw(hdc);
+		m_pAnimateSprite->Draw();
 
-    CGameObject::Draw(hdc);
+	CGameObject::Draw();
 }
 
 void CPlayer::Move(ULONG ulDirection)
@@ -104,9 +87,46 @@ void CPlayer::Move(ULONG ulDirection)
 	myVelocity=Vec2();
 
 	if( ulDirection & CPlayer::DIR_LEFT )
-		myVelocity.x = -150;
+		myVelocity.x = -300;
 
 	if( ulDirection & CPlayer::DIR_RIGHT )
-		myVelocity.x = 150;
+		myVelocity.x = 300;
+}
 
+void CPlayer::Animate()
+{
+	m_pAnimateSprite->myPosition = m_pSprite->myPosition;
+	m_pAnimateSprite->Play();
+	//PlaySound("data/explosion.wav", NULL, SND_FILENAME | SND_ASYNC);
+	m_bAnimate = true;
+}
+
+void CPlayer::Shrink_Bar()
+{
+	RECT r;
+	r.left = 0;
+	r.top = 0;
+	r.right = 66;
+	r.bottom = 33;
+
+	delete m_pSprite;
+	delete m_pAnimateSprite;
+	m_pSprite = new Sprite("data/barshrink.bmp", RGB(0xff,0x00, 0xff));
+	m_pAnimateSprite = new AnimatedSprite("data/barshrinkanimate.bmp", "data/barshrinkanimatemask.bmp");
+	m_pAnimateSprite->Initialize(r, 3, 1 / 16.f);
+}
+
+void CPlayer::Normal_Bar()
+{
+	RECT r;
+	r.left = 0;
+	r.top = 0;
+	r.right = 132;
+	r.bottom = 33;
+
+	delete m_pSprite;
+	delete m_pAnimateSprite;
+	m_pSprite = new Sprite("data/bar.bmp", RGB(0xff,0x00, 0xff));
+	m_pAnimateSprite = new AnimatedSprite("data/baranimate.bmp", "data/baranimatemask.bmp");
+	m_pAnimateSprite->Initialize(r, 3, 1 / 16.f);
 }

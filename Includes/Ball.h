@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// File: CPlayer.cpp
+// File: Ball.cpp
 //
 // Desc: This file stores the player object class. This class performs tasks
 //	   such as player movement, some minor physics as well as rendering.
@@ -11,7 +11,7 @@
 #define _BALL_H_
 
 //-----------------------------------------------------------------------------
-// CPlayer Specific Includes
+// Ball Specific Includes
 //-----------------------------------------------------------------------------
 #include "Main.h"
 #include "Sprite.h"
@@ -21,7 +21,7 @@
 // Main Class Definitions
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-// Name : CPlayer (Class)
+// Name : Ball (Class)
 // Desc : Player class handles all player manipulation, update and management.
 //-----------------------------------------------------------------------------
 class Ball : public CGameObject
@@ -32,10 +32,10 @@ public:
 	//-------------------------------------------------------------------------
 	enum DIRECTION 
 	{ 
-		DIR_FORWARD		= 1, 
-		DIR_BACKWARD	= 2, 
-		DIR_LEFT		= 4, 
-		DIR_RIGHT		= 8, 
+		DIR_FORWARD     = 1, 
+		DIR_BACKWARD    = 2, 
+		DIR_LEFT        = 4, 
+		DIR_RIGHT       = 8, 
 		DIR_START		= 10,
 	};
 
@@ -48,30 +48,29 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-			 Ball();
+	Ball();
 	virtual ~Ball();
 
 	//-------------------------------------------------------------------------
 	// Public Functions for This Class.
 	//-------------------------------------------------------------------------
-	void						Init(HDC hdc, const Vec2& position);
-	void						Update( float dt );
-	GameObjectType				GetObjectType() const { return GOT_Ball; }
-	void						Draw(HDC hdc) const;
-	void						Move(ULONG ulDirection, int FollowPlayer);
-	virtual int					GetWidth() const { return m_pSprite->GetWidth(); }
-	virtual int					GetHeight() const { return m_pSprite->GetHeight(); }
+	void            Init(const Vec2& position);
+	void            Update( float dt );
+	GameObjectType  GetObjectType() const { return GOT_Ball; }
+	void            Draw() const;
+	void            Move(ULONG ulDirection, bool FollowPlayer);
+	virtual int	    GetWidth() const { return m_pSprite->GetWidth(); }
+	virtual int     GetHeight() const { return m_pSprite->GetHeight(); }
+	void			Increase_Speed();
+	void			Decrease_Speed();
 
 private:
 	//-------------------------------------------------------------------------
 	// Private Variables for This Class.
 	//-------------------------------------------------------------------------
-	Sprite*						m_pSprite;
-	ESpeedStates				m_eSpeedState;
-	float						m_fTimer;
-	
-	ULONG						WinHeight;
-	ULONG						WinWidth;
+	Sprite*         m_pSprite;
+	ESpeedStates    m_eSpeedState;
+	float           m_fTimer;
 
 };
 

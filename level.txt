@@ -1,13 +1,34 @@
 Level1
-c1--1
+--1111ab1111--
 Level2
--1ab111111c11e
-dduu11--11uudd
-111c111111ab1-
+b11a111111a11a
+--1111cg1111--
+a11b111111b11b
 Level3
-1-ud-a--b----c
---ef
+dddddddddddddd
+d1bb111111111d
+d11aa1111f111d
+d111bb111h111d
+d1111aa111111d
+d1f111aa111g1d
+d111bb11aa111d
+dddddddddddddd
 Level4
+u1e111a1111c1u
+1111i1b11i1111
+uuu111a1111uuu
+uuu111b1111uuu
+1111j1a11j1111
+u1c111b111e11u
+Level5
+111aa1111aa11g
+1------------1
+1-111e111111-1
+j-1111uu11g1-j
+1-1111111111-1
+1------------1
+h1bb1111111bb1
+Level6
 
 END
 
@@ -18,11 +39,15 @@ Brick:
 1 - normal brick
 u - unbreakable brick
 d - double collision brick
+- - No brick
 
-GiftBrick:
+BrickGift:
 a - +100 score bouns
 b - +200 score bonus
 c - +1 Life
 e - -1 Life
 f - Unstopable ball
-- - No brick
+g - Increase ball speed
+h - Decrease Ball speed
+i - Sticky Bar
+j - Shrink Bar

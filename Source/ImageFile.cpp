@@ -177,19 +177,19 @@ BYTE* CImageFile::CopyMonoImage(EColorChannel chn, const RECT* rc)
 						f *= (g-b)*60.f;
 					}
 					else
-					if(fabsf(u-g)<EPS)
-					{
-						f *= (b-r)*60.f;
-						f += 120;
-					}
-					else
-					if(fabsf(u-b)<EPS)
-					{
-						f *= (r-g)*60.f;
-						f += 240;
-					}
+						if(fabsf(u-g)<EPS)
+						{
+							f *= (b-r)*60.f;
+							f += 120;
+						}
+						else
+							if(fabsf(u-b)<EPS)
+							{
+								f *= (r-g)*60.f;
+								f += 240;
+							}
 
-					v = (BYTE)(f*255.f/360.f);
+							v = (BYTE)(f*255.f/360.f);
 				}
 
 				img[i*imgWidth + j] = v;
@@ -228,7 +228,7 @@ BYTE* CImageFile::CopyMonoImage(EColorChannel chn, const RECT* rc)
 
 				img[i*imgWidth + j] = v;
 			}
-		break;
+			break;
 
 	case ECC_LUMINOSITY:
 		for(int i=0;i<imgHeight;i++)
@@ -256,7 +256,7 @@ BYTE* CImageFile::CopyMonoImage(EColorChannel chn, const RECT* rc)
 
 				img[i*imgWidth + j] = v;
 			}
-		break;
+			break;
 	}
 
 	return img;

@@ -11,7 +11,7 @@
 #define _GIFT_H_
 
 //-----------------------------------------------------------------------------
-// CPlayer Specific Includes
+// Gift Specific Includes
 //-----------------------------------------------------------------------------
 #include "Main.h"
 #include "Sprite.h"
@@ -32,10 +32,10 @@ public:
 	//-------------------------------------------------------------------------
 	enum DIRECTION 
 	{ 
-		DIR_FORWARD		= 1, 
-		DIR_BACKWARD	= 2, 
-		DIR_LEFT		= 4, 
-		DIR_RIGHT		= 8, 
+		DIR_FORWARD     = 1, 
+		DIR_BACKWARD    = 2, 
+		DIR_LEFT        = 4, 
+		DIR_RIGHT       = 8, 
 	};
 
 	enum ESpeedStates
@@ -47,47 +47,45 @@ public:
 	//-------------------------------------------------------------------------
 	// Constructors & Destructors for This Class.
 	//-------------------------------------------------------------------------
-			 Gift(char type);
+	Gift(char type);
 	virtual ~Gift();
 
 	//-------------------------------------------------------------------------
 	// Public Functions for This Class.
 	//-------------------------------------------------------------------------
-	void					Init(HDC hdc, const Vec2& position);
-	void					Update( float dt );
-	GameObjectType			GetObjectType() const 
-	{ 	
-		return GOT_Brick;
-	}
-	GameObjectTypeSub			GetObjectTypeSub() const 
+	void            Init(const Vec2& position);
+	void            Update( float dt );
+	GameObjectType  GetObjectType() const { return GOT_Brick; }
+	GameObjectTypeSub	GetObjectTypeSub() const 
 	{ 	
 		switch(GiftType)
 		{
-			case 'a': return GOT_Gift100; break;
-			case 'b': return GOT_Gift200; break;
-			case 'c': return GOT_GiftUpLife; break;
-			case 'e': return GOT_GiftDownLife; break;
-			case 'f': return GOT_GiftUnstoppableBall; break;
+		case 'a': return GOT_Gift100; break;
+		case 'b': return GOT_Gift200; break;
+		case 'c': return GOT_GiftUpLife; break;
+		case 'e': return GOT_GiftDownLife; break;
+		case 'f': return GOT_GiftUnstoppableBall; break;
+		case 'g': return GOT_GiftIncreaseSpeed; break;
+		case 'h': return GOT_GiftDecreaseSpeed; break;
+		case 'i': return GOT_GiftStickyBar; break;
+		case 'j': return GOT_GiftShrinkBar; break;
 		}
+		return GOT_InvalidSub;
 	}
-	void					Draw(HDC hdc) const;
-	void					Move(ULONG ulDirection);
-	virtual int				GetWidth() const { return m_pSprite->GetWidth(); }
-	virtual int				GetHeight() const { return m_pSprite->GetHeight(); }
-	int						DecreaseDouble(){ --DoubleCollision; return DoubleCollision;};
-	void					ChangeSprite(){ delete m_pSprite; m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); }
+	void            Draw() const;
+	void            Move(ULONG ulDirection);
+	virtual int	    GetWidth() const { return m_pSprite->GetWidth(); }
+	virtual int     GetHeight() const { return m_pSprite->GetHeight(); }
 
 private:
 	//-------------------------------------------------------------------------
 	// Private Variables for This Class.
 	//-------------------------------------------------------------------------
-	
-	Sprite*					m_pSprite;
-	ESpeedStates			m_eSpeedState;
-	float					m_fTimer;
-	char					GiftType;
-	int						DoubleCollision;
-	
+	Sprite*         m_pSprite;
+	ESpeedStates    m_eSpeedState;
+	float           m_fTimer;
+
+	char			GiftType;
 };
 
-#endif // _GIFT_H_
+#endif // _Gift_H_

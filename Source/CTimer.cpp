@@ -34,7 +34,7 @@ CTimer::CTimer()
 		m_PerfHardware		= FALSE;
 		m_LastTime			= timeGetTime(); 
 		m_TimeScale			= 0.001f;
-	
+
 	} // End If No Hardware
 
 	// Clear any needed values
@@ -80,7 +80,7 @@ void CTimer::Tick( float fLockFPS )
 
 	// Smoothly ramp up frame rate to prevent jittering
 	//if ( fLockFPS == 0.0f ) fLockFPS = (1.0f / GetTimeElapsed()) + 20.0f;
-	
+
 	// Should we lock the frame rate ?
 	if ( fLockFPS > 0.0f )
 	{
@@ -117,7 +117,7 @@ void CTimer::Tick( float fLockFPS )
 		if ( m_SampleCount < MAX_SAMPLE_COUNT ) m_SampleCount++;
 
 	} // End if
-	
+
 
 	// Calculate Frame Rate
 	m_FPSFrameCount++;

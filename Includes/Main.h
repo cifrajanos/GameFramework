@@ -12,11 +12,10 @@
 //-----------------------------------------------------------------------------
 // Main Application Includes
 //-----------------------------------------------------------------------------
-#define _CRTDBG_MAP_ALLOC
+#define CRTDBG_MAP_ALLOC
 #include "..\\Res\\resource.h"
 #include <windows.h>
 #include <crtdbg.h>
-#include <stdlib.h>
 #include <assert.h> 
 #include "Commdlg.h"
 #include <tchar.h>

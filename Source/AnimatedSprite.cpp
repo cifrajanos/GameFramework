@@ -1,14 +1,12 @@
 #include "AnimatedSprite.h"
 
 
-void AnimatedSprite::Initialize(HDC hdc, const RECT& rcFirstFrame, int iFrameCount, float fFrameDuration)
+void AnimatedSprite::Initialize(const RECT& rcFirstFrame, int iFrameCount, float fFrameDuration)
 {
-    Sprite::Initialize(hdc);
-
 	myFrameStartCrop.x = rcFirstFrame.left;
 	myFrameStartCrop.y = rcFirstFrame.top;
 
-    myFrameCrop = myFrameStartCrop;
+	myFrameCrop = myFrameStartCrop;
 
 	myFrameWidth = rcFirstFrame.right - rcFirstFrame.left;
 	myFrameHeight = rcFirstFrame.bottom - rcFirstFrame.top;
@@ -19,8 +17,8 @@ void AnimatedSprite::Initialize(HDC hdc, const RECT& rcFirstFrame, int iFrameCou
 	myFrameIndex = 0;
 
 	myInitializedState = true;
-    myLoopingState = false;
-    myPlayState = false;
+	myLoopingState = false;
+	myPlayState = false;
 }
 
 void AnimatedSprite::Update( float dt )
@@ -41,13 +39,13 @@ void AnimatedSprite::Update( float dt )
 			myFrameTimer = 0.f;
 			myFrameIndex++;
 
-            // loop when finished
-            if( myFrameIndex == myFrameCount )
-            {
-                myFrameIndex = 0;
-                if( !myLoopingState  )
-                    myPlayState = false;
-            }
+			// loop when finished
+			if( myFrameIndex == myFrameCount )
+			{
+				myFrameIndex = 0;
+				if( !myLoopingState  )
+					myPlayState = false;
+			}
 		}
 	}
 }

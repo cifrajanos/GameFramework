@@ -1,5 +1,5 @@
 /*! 
- *  \brief     ImageFile class.
+*  \brief     ImageFile class.
  *  \details   This class is responsible for loading / drawing bitmap images.
  *  \author    Mihai Popescu
  *  \date      01/03/2009
