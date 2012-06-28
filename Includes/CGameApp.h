@@ -57,10 +57,15 @@ public:
 	HDC         GetBackBufferDC() const { return m_pBBuffer ? m_pBBuffer->getDC() : NULL; }
 
 private:
+	struct highscore{
+		char		name[21];
+		int			points;
+	};
 	//-------------------------------------------------------------------------
 	// Private Functions for This Class
 	//-------------------------------------------------------------------------
 	bool        BuildObjects	( );
+	bool        BuildObjects_Load	( );
 	void        ReleaseObjects( );
 	void        FrameAdvance	( );
 	bool        CreateDisplay	( );
@@ -80,6 +85,10 @@ private:
 	void		Decrease_Life2();
 	void		DrawLife(HDC hdc) const;
 	void		DrawGame(HDC hdc,char type[20]);
+	void		SaveScore();
+	void		ScoreTable();
+	void		ShowScoreTable(HDC hdc);
+	void		SaveLevel();
 
 	//-------------------------------------------------------------------------
 	// Private Static Functions For This Class
@@ -115,6 +124,9 @@ private:
 	int					nrBricks;
 	int					countScore;
 	int					countLife;
+	int					countGameOver;
+	int					brickHeight;
+	int					brickWidth;
 	float				m_fTimer;
 	char				text[50];
 	char				text2[50];
@@ -128,11 +140,14 @@ private:
 	bool				StickyBar;
 	bool				ShrinkBar;
 	bool				MoveBall;
+	bool				StartLoad;
+	bool				SlowMouse;
 	Vec2				ballPos;
 	LoadLevel			level;
 	RECT				rect;
 	RECT				rect2;
 	CURSORINFO			cursor;
+	std::vector<highscore>		m_highscores;
 
 
 	// separate vectors to gain a little performance

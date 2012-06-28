@@ -1,5 +1,5 @@
 Level1
---1111ab1111--
+--11aagmbb11--
 Level2
 b11a111111a11a
 --1111cg1111--
@@ -51,3 +51,4 @@ g - Increase ball speed
 h - Decrease Ball speed
 i - Sticky Bar
 j - Shrink Bar
+m - Slow Mouse

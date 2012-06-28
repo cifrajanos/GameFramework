@@ -69,6 +69,7 @@ public:
 		case 'h': return GOT_GiftDecreaseSpeed; break;
 		case 'i': return GOT_GiftStickyBar; break;
 		case 'j': return GOT_GiftShrinkBar; break;
+		case 'm': return GOT_GiftSlowMouse; break;
 		}
 		return GOT_InvalidSub;
 	}

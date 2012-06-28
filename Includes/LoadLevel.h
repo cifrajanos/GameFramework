@@ -22,8 +22,6 @@ class LoadLevel
 	char getbricks[200];
 	char nrlevel[100];
 	char *pch,*pch2;
-	string currentlevel;
-	string nextlevel;
 
 public:
 
@@ -31,10 +29,14 @@ public:
 	virtual ~LoadLevel(	);
 
 	void LoadBricks(int levelnr);
+	void LoadBricks_Load(int levelnr);
 	void RandomBricks(char without[]);
+	void SaveLevel();
 
 public:
 
+	string currentlevel;
+	string nextlevel;
 	string		bricks;
 	bool		Winner;
 

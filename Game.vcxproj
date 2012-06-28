@@ -169,6 +169,7 @@
     </ClCompile>
     <ClCompile Include="Source\Gift.cpp" />
     <ClCompile Include="Source\ImageFile.cpp" />
+    <ClCompile Include="Source\InputBox.cpp" />
     <ClCompile Include="Source\Main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -187,6 +188,7 @@
     <ClInclude Include="Includes\CGameApp.h" />
     <ClInclude Include="Includes\CGameObject.h" />
     <ClInclude Include="Includes\Gift.h" />
+    <ClInclude Include="Includes\InputBox.h" />
     <ClInclude Include="Includes\LoadLevel.h" />
     <ClInclude Include="Includes\CPlayer.h" />
     <ClInclude Include="Includes\CTimer.h" />

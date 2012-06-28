@@ -73,6 +73,7 @@ public:
 		case 'h': return GOT_BrickGift; break;
 		case 'i': return GOT_BrickGift; break;
 		case 'j': return GOT_BrickGift; break;
+		case 'm': return GOT_BrickGift; break;
 		}
 		return GOT_InvalidSub;
 	}

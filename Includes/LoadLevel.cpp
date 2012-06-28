@@ -55,6 +55,51 @@ void LoadLevel::LoadBricks(int levelnr)
 	fclose(f);
 }
 
+void LoadLevel::LoadBricks_Load(int levelnr)
+{
+	bricks = "";	
+	startparse = false;
+	currentlevel = "Level";
+	nextlevel = "Level";
+
+
+	itoa(levelnr,nrlevel,10);
+	currentlevel += nrlevel;
+	levelnr++;
+	itoa(levelnr,nrlevel,10);
+	nextlevel += nrlevel;
+
+
+	f = fopen("savelevel.txt","r");
+	while(!feof(f))
+	{
+		fscanf(f,"%s ",&getbricks);
+		pch = strstr(getbricks,currentlevel.c_str());
+		if(pch != NULL)
+		{
+			startparse = true;
+		}
+		if(startparse == true)
+		{
+			pch = strstr(getbricks,nextlevel.c_str());
+			pch2 = strstr(getbricks,"END");
+			if(pch != NULL || pch2 != NULL)
+			{
+				if(pch2 != NULL)
+				{
+					Winner = true;
+				}
+				break;
+			}
+			pch = strstr(getbricks,"Level");
+			if(pch == NULL){
+				bricks += getbricks;
+			}
+		}
+	}
+	fclose(f);
+}
+
 void LoadLevel::RandomBricks(char without[])
 {
 	srand ( unsigned ( time (NULL) ) );
@@ -147,4 +192,10 @@ void LoadLevel::RandomBricks(char without[])
 			}
 
 		}
+}
+
+
+void LoadLevel::SaveLevel()
+{
+
 }

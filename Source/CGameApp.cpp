@@ -11,6 +11,7 @@
 //-----------------------------------------------------------------------------
 #include "CGameApp.h"
 #include "CPlayer.h"
+#include "InputBox.h"
 #include <algorithm>
 
 SINGLETON_IMPL(CGameApp);
@@ -46,6 +47,7 @@ CGameApp::CGameApp()
 	m_pBBuffer		= NULL;
 	m_LastFrameRate = 0;
 	m_fTimer		= 0;
+	countGameOver	= 0;
 	FollowPlayer	= true;
 	GameOver		= false;
 	BricksExist		= false;
@@ -55,6 +57,8 @@ CGameApp::CGameApp()
 	StickyBar		= false;
 	ShrinkBar		= false;
 	MoveBall		= false;
+	StartLoad		= false;
+	SlowMouse		= false;
 	Score();
 	Life();
 }
@@ -182,6 +186,20 @@ int CGameApp::BeginGame()
 					SetupGameState();
 					StartGame = true;
 
+				}
+
+				if(StartLoad == true)
+				{
+					if (!BuildObjects_Load()) 
+					{ 
+						MessageBox( 0, _T("Failed to initialize properly. Reinstalling the application may solve this problem.\nIf the problem persists, please contact technical support."), _T("Fatal Error"), MB_OK | MB_ICONSTOP);
+						ShutDown(); 
+						return false; 
+					}
+
+					// Set up all required game states
+					SetupGameState();
+					StartGame = true;
 				}
 
 				if(cursor.ptScreenPos.x > m_nViewWidth - LOCATE_MENU_X && cursor.ptScreenPos.y > m_nViewHeight + LOCATE_MENU_Y_BOTTOM)
@@ -319,6 +337,10 @@ LRESULT CGameApp::DisplayWndProc( HWND hWnd, UINT Message, WPARAM wParam, LPARAM
 			else
 				m_bActive = true;
 			break;
+		case 0x53:
+			SaveLevel(); break;
+		case 0x4C:
+			StartLoad = true; break;
 		case VK_SPACE:
 			if(StartGame == true)
 			{
@@ -373,6 +395,59 @@ bool CGameApp::BuildObjects()
 		}
 		auto pBrick = std::make_shared<Brick>(*it);
 		m_vGameObjects.push_back(pBrick);
+		brickHeight = pBrick->GetHeight();
+		brickWidth = pBrick->GetWidth();
+	}
+	BricksExist = true;
+
+	if(!m_imgBackground.LoadBitmapFromFile("data/background.bmp", GetDC(m_hWnd)))
+		return false;
+
+	m_imgBackground.SetFilter(new CBoxFilter());
+	m_imgBackground.Resample(m_nViewWidth, m_nViewHeight);
+
+	// Success!
+	return true;
+}
+
+bool CGameApp::BuildObjects_Load()
+{	
+	auto pPlayer = std::make_shared<CPlayer>();
+	m_vGameObjects.push_back(pPlayer);
+	m_pPlayer = pPlayer;
+
+	auto pBall = std::make_shared<Ball>();
+	m_vGameObjects.push_back(pBall);
+	m_pBall = pBall;
+
+	FILE *f;
+	char file[10];
+	char * pch;
+	f=fopen("savelevel.txt","r");
+	fscanf(f,"%s ",file);
+	pch = strtok (file,"Level");
+	if(pch != NULL)
+	{
+		nrLevel = atoi(pch);
+		pch = strtok (NULL, "Level");
+	}
+	fclose(f);
+
+	//nrLevel = 1;
+	level.LoadBricks_Load(nrLevel);
+	//level.RandomBricks("-ud");
+
+	string::iterator it;
+	for(it = level.bricks.begin(); it < level.bricks.end(); it++)
+	{
+		if(*it == '-')
+		{
+			continue;
+		}
+		auto pBrick = std::make_shared<Brick>(*it);
+		m_vGameObjects.push_back(pBrick);
+		brickHeight = pBrick->GetHeight();
+		brickWidth = pBrick->GetWidth();
 	}
 	BricksExist = true;
 
@@ -547,6 +622,7 @@ void CGameApp::FrameAdvance()
 			UnstoppableBall = false;
 			StickyBar = false;
 			MoveBall = false;
+			SystemParametersInfo(SPI_SETMOUSESPEED, NULL, (void*)10, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE );
 			ballPos.x = 0;
 			if(ShrinkBar == true)
 			{
@@ -601,7 +677,14 @@ void CGameApp::FrameAdvance()
 					}
 				}
 			}
-			LevelChange = true;
+			if(level.Winner == true)
+			{
+				LevelChange = false;
+			}
+			else
+			{
+				LevelChange = true;
+			}
 		}
 
 		// Animate the game objects
@@ -641,6 +724,11 @@ void CGameApp::ProcessInput( )
 
 	if(MouseOrKeyboard == false)
 	{
+		if(SlowMouse == true)
+		{
+			SystemParametersInfo(SPI_SETMOUSESPEED, NULL, (void*)1, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE ); 
+			SlowMouse = false;
+		}
 		m_pPlayer.lock()->myPosition.x = cursor.ptScreenPos.x;
 	}
 
@@ -749,9 +837,27 @@ void CGameApp::DrawObjects()
 		if(LevelChange == true)
 			DrawGame(hdc,"level");
 		if(level.Winner == true)
+		{
 			DrawGame(hdc,"winner");
+			if(countGameOver == 0)
+			{
+				SaveScore();
+				ScoreTable();
+			}
+			ShowScoreTable(hdc);
+			countGameOver++;
+		}
 		if(GameOver == true)
+		{
 			DrawGame(hdc,"gameover");
+			if(countGameOver == 0)
+			{
+				SaveScore();
+				ScoreTable();
+			}
+			ShowScoreTable(hdc);
+			countGameOver++;
+		}
 	}
 
 	DrawScore(hdc);
@@ -872,6 +978,7 @@ void CGameApp::CollisionDetection()
 								ShrinkBar = false;
 								MoveBall = false;
 								m_pPlayer.lock()->Normal_Bar();
+								SystemParametersInfo(SPI_SETMOUSESPEED, NULL, (void*)10, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE );
 								if(countLife == NO_LIFE)
 								{
 									GameOver = true;
@@ -1027,6 +1134,11 @@ void CGameApp::CollisionDetection()
 							m_vGameObjectsGift.erase(it2);
 							break;
 						}
+						if(pGameObj2->GetObjectTypeSub() == GOT_GiftSlowMouse)
+						{
+							SlowMouse = true;
+							break;
+						}
 					}
 
 					int dy = (int)pos2.y - (m_nViewHeight - pGameObj2->GetHeight() / 2);
@@ -1110,6 +1222,97 @@ void CGameApp::DrawLife(HDC hdc) const
 	DrawText(hdc, text2, -1, (LPRECT)&rect2, DT_WORDBREAK);
 }
 
+void CGameApp::SaveScore()
+{
+	HINSTANCE hInst= GetModuleHandle (0);
+	CInputBox	*myinp;
+	myinp = new CInputBox(hInst);
+	char	result[21];
+	strcpy(result, "");
+	myinp->ShowInputBox(0, "Score", "Enter your name !", result, 50);
+	delete myinp;
+
+	// Save score
+
+	int finalScore = countScore;
+	FILE *f = fopen("score.txt", "a");
+	fprintf(f, "%s %d", result, finalScore);
+	fclose(f);
+}
+
+void CGameApp::ScoreTable()
+{
+	highscore h;
+	FILE *f = fopen("score.txt", "r");
+	if(f)
+	{
+		while(!feof(f))
+		{
+			fscanf(f, "%s", h.name);
+			fscanf(f, "%d\n", &h.points);
+			m_highscores.push_back(h);
+		}
+	}
+	fclose(f);
+
+	highscore aux;
+
+
+	// Sort score
+	for(int i = 0; i < m_highscores.size() - 1; i++)
+	{
+		for(int j = i + 1; j < m_highscores.size(); j++)
+		{
+			if(m_highscores[i].points < m_highscores[j].points)
+			{
+				aux = m_highscores[i];
+				m_highscores[i] = m_highscores[j];
+				m_highscores[j] = aux;
+			}
+		}
+	}
+}
+
+void CGameApp::ShowScoreTable(HDC hdc)
+{
+	RECT rect;
+	RECT rect2;
+	rect.left = 200;
+	rect.top = 100;
+
+
+	SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
+	SetTextColor(hdc, RGB(0x00, 0, 0));
+	SetBkMode(hdc, OPAQUE);
+
+	string showrank;
+	int rank;
+	rank = 1;
+
+	for(int i = 0; i < m_highscores.size() - 1; i++)
+	{
+		rect.left += 0;
+		rect.top += 20;
+		rect.right = 470;
+		rect.bottom = 600;
+		rect2 = rect;
+		char nr[10];
+		char finalscore[1000];
+
+		itoa(rank,nr,10);
+		showrank = nr;
+		DrawText(hdc, showrank.c_str() , -1, (LPRECT)&rect, DT_WORDBREAK);
+		rect2.left += 20;
+		DrawText(hdc, m_highscores[i].name , -1, (LPRECT)&rect2, DT_WORDBREAK);
+		rect2.left += 100;
+		itoa(m_highscores[i].points, finalscore, 10);
+		DrawText(hdc, finalscore , -1, (LPRECT)&rect2, DT_WORDBREAK);
+		rank++;
+	}
+
+}
+
+
 void CGameApp::DrawGame(HDC hdc,char type[20])
 {
 	RECT rect;
@@ -1135,13 +1338,111 @@ void CGameApp::DrawGame(HDC hdc,char type[20])
 
 	if(type == "winner")
 	{
+		rect.left = 150;
+		rect.top = 50;
+		rect.right = 470;
+		rect.bottom = 320;
 		DrawText(hdc, "WINNNERRR!!! Press ESC to exit", -1, (LPRECT)&rect, DT_WORDBREAK);
 		BricksExist = true;
 	}
 
 	if(type == "gameover")
 	{
+		rect.left = 150;
+		rect.top = 50;
+		rect.right = 470;
+		rect.bottom = 320;
 		DrawText(hdc, "GAME OVER!!! Press ESC to exit", -1, (LPRECT)&rect, DT_WORDBREAK);
 		BricksExist = true;
 	}
 }
+
+void CGameApp::SaveLevel()
+{
+	string savebricks;
+	Vec2 brickPos;
+	brickPos.x = START_BRICK_POS_X;
+	brickPos.y = START_BRICK_POS_Y;
+	nrBricks = 0;
+
+	for(std::size_t levelbricks = 0; levelbricks < level.bricks.size(); levelbricks++)
+	{
+		if(level.bricks[nrBricks] == '-')
+		{
+			if(brickPos.x >= (m_nViewWidth - GET_MAX_BRICK_POS_X) - GET_MAX_BRICK_POS_X)
+			{
+				savebricks += level.bricks[nrBricks];
+				brickPos.x = START_BRICK_POS_X;
+				brickPos.y += brickHeight;
+				nrBricks++;
+				continue;
+			}
+			else
+			{
+				savebricks += level.bricks[nrBricks];
+				brickPos.x += brickWidth;
+				nrBricks++;
+				continue;
+			}
+		}
+		else
+		{
+			bool found = false;
+			for(auto it = m_vGameObjects.begin(); it != m_vGameObjects.end(); ++it)
+			{
+				CGameObject * pGameObj = it->get();
+				if(pGameObj->GetObjectType() == GOT_Brick)
+				{
+					if(pGameObj->myPosition.x == brickPos.x && pGameObj->myPosition.y == brickPos.y)
+					{
+						found = true;
+						break;
+					}
+				}
+			}
+
+
+			if(found == true)
+				if(brickPos.x >= (m_nViewWidth - GET_MAX_BRICK_POS_X) - GET_MAX_BRICK_POS_X)
+				{
+					savebricks += level.bricks[nrBricks];
+					brickPos.x = START_BRICK_POS_X;
+					brickPos.y += brickHeight;
+					nrBricks++;
+				}
+				else
+				{
+					savebricks += level.bricks[nrBricks];
+					brickPos.x += brickWidth;
+					nrBricks++;
+				}
+
+				if(found == false)
+					if(brickPos.x >= (m_nViewWidth - GET_MAX_BRICK_POS_X) - GET_MAX_BRICK_POS_X)
+					{
+						savebricks += "-";
+						brickPos.x = START_BRICK_POS_X;
+						brickPos.y += brickHeight;
+						nrBricks++;
+					}
+					else
+					{
+						savebricks += "-";
+						brickPos.x += brickWidth;
+						nrBricks++;
+					}
+		}
+	}
+
+	char *end;
+	end="END";
+	FILE *f;
+	f=fopen("savelevel.txt","w");
+	fprintf(f,"%s\n", level.currentlevel.c_str());
+	fprintf(f,"%s\n", savebricks.c_str());
+	fprintf(f,"%s\n", level.nextlevel.c_str());
+	fprintf(f,"\n%s", end);
+	fclose(f);
+
+}
+

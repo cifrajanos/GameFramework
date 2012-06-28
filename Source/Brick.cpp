@@ -37,6 +37,7 @@ Brick::Brick(char type)
 	case 'h': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
 	case 'i': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
 	case 'j': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
+	case 'm': m_pSprite = new Sprite("data/brick.bmp", RGB(0xff,0x00, 0xff)); break;
 	}
 
 	m_eSpeedState = SPEED_STOP;

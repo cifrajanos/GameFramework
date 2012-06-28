@@ -40,6 +40,8 @@ enum GameObjectTypeSub
 	GOT_GiftStickyBar,
 	GOT_GiftShrinkBar,
 	GOT_Animate,
+	GOT_GiftSlowMouse,
+
 
 
 };
